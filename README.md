@@ -1,2 +1,2 @@
 # TTree-dictionary
-An implementation of a dictionary with trees in Haskell.
+An implementation of dictionaries with trees in Haskell.
