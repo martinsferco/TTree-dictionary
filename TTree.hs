@@ -10,7 +10,6 @@ data TTree k v = Node k (Maybe v) (TTree k v) (TTree k v) (TTree k v)
 
 
 
-
 -- Ejemplo de un valor t :: TTree Char Int:
 t :: TTree Char Integer
 t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
@@ -46,11 +45,10 @@ keys = undefined
 
 
 -- Ahora demos una instancia de la clase Dic para el tipo de datos TTree k v
+instance Ord k => Dic [k] v (TTree k v) where
 
--- instance Dic k v (TTree k v) where
-
---      vacio = E
---      insertar = insert
---      buscar = search
---      eliminar = delete
---      claves = keys
+     vacio    = E
+     insertar = insert
+     buscar   = search
+     eliminar = delete
+     claves   = keys
