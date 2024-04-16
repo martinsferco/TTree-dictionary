@@ -40,8 +40,13 @@ delete :: Ord k => [k] -> TTree k v -> TTree k v
 delete = undefined
 
 -- d) Devuelve una lista ordenada con las claves del mismo
+-- TODO: Optimizar con funcion auxiliar que tenga como argumento el prefijo que estamos
+-- TODO  llevando en esa parte del arbol
 keys :: TTree k v -> [[k]]
-keys = undefined
+keys E = []
+keys (Leaf k _) = [[k]]
+keys (Node k Nothing l c r) = keys l ++ map (k:) (keys c) ++ keys r 
+keys (Node k (Just v) l c r) = keys l ++ [[k]] ++ map (k:) (keys c) ++ keys r 
 
 
 -- Ahora demos una instancia de la clase Dic para el tipo de datos TTree k v
