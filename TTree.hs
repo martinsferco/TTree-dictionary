@@ -28,7 +28,8 @@ t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
 
 -- a) Busca el valor asociado a una clave 
 search :: Ord k => [k] -> TTree k v -> Maybe v
-search = undefined
+search _ E      = Nothing
+search [] _     = Nothing -- No le pasaste ninguna clave
 
 -- b) Agrega un par (clave, valor) a un arbo. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
@@ -45,8 +46,12 @@ delete = undefined
 keys :: TTree k v -> [[k]]
 keys E = []
 keys (Leaf k _) = [[k]]
-keys (Node k Nothing l c r) = keys l ++ map (k:) (keys c) ++ keys r 
-keys (Node k (Just v) l c r) = keys l ++ [[k]] ++ map (k:) (keys c) ++ keys r 
+keys (Node k v l c r) = keys l ++ (ifKey k v) ++ map (k:) (keys c) ++ keys r 
+
+     where 
+          ifKey :: k -> Maybe v -> [[k]]
+          ifKey _ Nothing  = []
+          ifKey k (Just v) = [[k]]
 
 
 -- Ahora demos una instancia de la clase Dic para el tipo de datos TTree k v
