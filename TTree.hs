@@ -6,6 +6,7 @@ import Dic
 data TTree k v = Node k (Maybe v) (TTree k v) (TTree k v) (TTree k v)
                | Leaf k v
                | E  
+               deriving Show
 
 
 
@@ -28,21 +29,53 @@ t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
 
 -- a) Busca el valor asociado a una clave 
 search :: Ord k => [k] -> TTree k v -> Maybe v
-search _ E      = Nothing
-search [] _     = Nothing 
+search _ E             = Nothing
+search [] _            = error "Error: invalid key"
 
-search (x:xs) (Leaf k v)        | null xs    = if x == k then Just v else Nothing
-                                | otherwise  = Nothing
+search (x:xs) (Leaf k v)        
+          | null xs    = if x == k then Just v else Nothing
+          | otherwise  = Nothing
 
-search (x:xs) (Node k mv l c r) | x == k     = if null xs then mv else search xs c
-                                | x < k      = search (x:xs) l
-                                | x > k      = search (x:xs) r
+search (x:xs) (Node k mv l c r)
+          | x == k     = if null xs then mv else search xs c
+          | x < k      = search (x:xs) l
+          | x > k      = search (x:xs) r
+
 
 
 -- b) Agrega un par (clave, valor) a un arbol. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
 insert :: Ord k => [k] -> v -> TTree k v -> TTree k v
-insert = undefined
+
+insert l v E = linea l v 
+
+insert [x] nv (Leaf k v) | x == k  = Leaf k nv
+                         | x > k   = Node k (Just v) E E (Leaf x nv) 
+                         | x < k   = Node k (Just v) (Leaf x nv) E E
+
+insert (x:xs) nv (Leaf k v) | x == k = Node k (Just v) E (linea xs nv) E
+                            | x > k  = Node k (Just v) E E (linea xs nv)
+                            | x < k  = Node k (Just v) (linea xs nv) E E
+
+
+
+
+
+
+
+
+insert [x] nv (Node k v l c r) | x == k = Node k (Just nv) l c r
+                               | x > k  = Node k v l c (insert [x] nv r)
+                               | x < k  = Node k v (insert [x] nv l) c r
+
+insert (x:xs) nv (Node k v l c r) | x == k   = Node k v l (insert xs nv c) r
+                                  | x > k    = Node k v l c (insert (x:xs) nv r)
+                                  | x < k    = Node k v (insert (x:xs) nv l) c r
+
+
+linea :: Ord k => [k] -> v -> TTree k v
+linea [x] v = Leaf x v
+linea (x:xs) v = Node x Nothing E (linea xs v) E
 
 
 -- c) Elimina una clave y el valor asociado a esta en un arbol
