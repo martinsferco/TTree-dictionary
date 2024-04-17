@@ -29,8 +29,8 @@ t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
 
 -- a) Busca el valor asociado a una clave 
 search :: Ord k => [k] -> TTree k v -> Maybe v
+search [] _            = error "Error: keys must be non-empty"
 search _ E             = Nothing
-search [] _            = error "Error: invalid key"
 
 search (x:xs) (Leaf k v)        
           | null xs    = if x == k then Just v else Nothing
@@ -49,19 +49,19 @@ insert :: Ord k => [k] -> v -> TTree k v -> TTree k v
 insert lx v E             = keyToTTree lx v 
 
 insert lx@(x:xs) nv (Leaf k v) 
-               | x == k   = if null xs then Leaf k nv
-                                       else Node k (Just v) E (keyToTTree xs nv) E
+          | x == k   = if null xs then Leaf k nv
+                                  else Node k (Just v) E (keyToTTree xs nv) E
 
-               | x > k    = Node k (Just v) E E (keyToTTree lx nv)
-               | x < k    = Node k (Just v) (keyToTTree lx nv) E E
+          | x > k    = Node k (Just v) E E (keyToTTree lx nv)
+          | x < k    = Node k (Just v) (keyToTTree lx nv) E E
 
 
 insert lx@(x:xs) nv (Node k v l c r) 
-               | x == k   = if null xs then Node k (Just nv) l c r
-                                                            else Node k v l (insert xs nv c) r
+          | x == k   = if null xs then Node k (Just nv) l c r
+                                  else Node k v l (insert xs nv c) r
                                    
-               | x > k    = Node k v l c (insert lx nv r)
-               | x < k    = Node k v (insert lx nv l) c r
+          | x > k    = Node k v l c (insert lx nv r)
+          | x < k    = Node k v (insert lx nv l) c r
 
 
 keyToTTree :: Ord k => [k] -> v -> TTree k v
@@ -71,7 +71,24 @@ keyToTTree (x:xs) v = Node x Nothing E (keyToTTree xs v) E
 
 -- c) Elimina una clave y el valor asociado a esta en un arbol
 delete :: Ord k => [k] -> TTree k v -> TTree k v
-delete = undefined
+delete [] _ = error "Error: keys must be non-empty"
+delete _ E = E
+
+delete lx@(x:xs) lf@(Leaf k v) 
+          | x == k  = if null xs then E else lf
+          | otherwise = lf 
+
+delete lx@(x:xs) (Node k v l c r) 
+          | x == k   = if null xs then (Node k Nothing l c r)
+                                  else balance (Node k v l (delete xs c) r) 
+          | x > k    = balance (Node k v l c (delete lx r))
+          | x < k    = balance (Node k v (delete lx l) c r)
+
+          where
+               balance (Node k (Just v) E E E) = Leaf k v
+               balance (Node k Nothing E E E)  = E 
+               balance t                       = t
+
 
 -- d) Devuelve una lista ordenada con las claves del mismo
 keys :: TTree k v -> [[k]]
@@ -104,3 +121,6 @@ t5 = insert "reo" 2 t4
 t6 = insert "red" 9 t5
 t7 = insert "res" 4 t6
 t8 = insert "ras" 1 t7
+
+
+
