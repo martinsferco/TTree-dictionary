@@ -1,11 +1,11 @@
-
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE  FunctionalDependencies #-}
 
+
 module Dic where
 
--- e) Utilizaremos la siguiente clase en Haskell para representar diccionarios
+-- Definimos la clase Dic
 class Dic k v d | d -> k v where
   
   vacio    :: d

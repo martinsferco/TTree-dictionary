@@ -9,7 +9,6 @@ data TTree k v = Node k (Maybe v) (TTree k v) (TTree k v) (TTree k v)
 
 
 
-
 -- Ejemplo de un valor t :: TTree Char Int:
 t :: TTree Char Integer
 t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
@@ -23,18 +22,28 @@ t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
                         E)
 
 
+
 -- Definamos las siguientes funciones en Haskell para manipular arboles de del tipo
 -- TTree k v
 
 -- a) Busca el valor asociado a una clave 
 search :: Ord k => [k] -> TTree k v -> Maybe v
 search _ E      = Nothing
-search [] _     = Nothing -- No le pasaste ninguna clave
+search [] _     = Nothing 
 
--- b) Agrega un par (clave, valor) a un arbo. Si la clave esta en el arbol, actualiza
+search (x:xs) (Leaf k v)        | null xs    = if x == k then Just v else Nothing
+                                | otherwise  = Nothing
+
+search (x:xs) (Node k mv l c r) | x == k     = if null xs then mv else search xs c
+                                | x < k      = search (x:xs) l
+                                | x > k      = search (x:xs) r
+
+
+-- b) Agrega un par (clave, valor) a un arbol. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
 insert :: Ord k => [k] -> v -> TTree k v -> TTree k v
 insert = undefined
+
 
 -- c) Elimina una clave y el valor asociado a esta en un arbol
 delete :: Ord k => [k] -> TTree k v -> TTree k v
@@ -51,7 +60,8 @@ keys (Node k v l c r) = keys l ++ (ifKey k v) ++ map (k:) (keys c) ++ keys r
      where 
           ifKey :: k -> Maybe v -> [[k]]
           ifKey _ Nothing  = []
-          ifKey k (Just v) = [[k]]
+          ifKey k (Just _) = [[k]]
+
 
 
 -- Ahora demos una instancia de la clase Dic para el tipo de datos TTree k v
