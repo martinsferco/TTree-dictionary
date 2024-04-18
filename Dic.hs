@@ -5,6 +5,7 @@
 
 module Dic where
 
+
 -- Definimos la clase Dic
 class Dic k v d | d -> k v where
   
@@ -13,4 +14,3 @@ class Dic k v d | d -> k v where
   buscar   :: Ord k => k -> d -> Maybe v
   eliminar :: Ord k => k -> d -> d
   claves   :: Ord k => d -> [k]  
-

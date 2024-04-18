@@ -1,52 +1,59 @@
 module TTree where
 
+
 import Dic
 
 -- Definicion del tipo algebraico TTree k v
 data TTree k v = Node k (Maybe v) (TTree k v) (TTree k v) (TTree k v)
                | Leaf k v
                | E  
-               deriving Show
-
-
-
--- Ejemplo de un valor t :: TTree Char Int:
-t :: TTree Char Integer
-t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
-                                           (Node 'o' (Just 2)  (Leaf 'd' 9)
-                                                               E 
-                                                               (Leaf 's' 4))
-                                           E)
-                      (Node 's' Nothing E (Node 'i' (Just 4) (Leaf 'e' 8)
-                                                             (Leaf 'n' 7)
-                                                                  E)
-                        E)
-
+               deriving (Show, Eq)
 
 
 -- Definamos las siguientes funciones en Haskell para manipular arboles de del tipo
 -- TTree k v
 
+
+{- CONSIDERACIONES -------------------------------
+
+Consideramos que los valores de la forma (Node k (Just v) E E E) deben ser reemplazados
+por (Leaf k v) y los valores (Node k Nothing E E E) deben ser directamente E.
+
+Como es posible armas esos valores con el tipo de datos algebraico, nuestra interfaz
+de funciones se encarga de manejar estos tipos de valores. Es decir, si se utiliza
+la interfaz no existirán problemas ya que no se generan esos valores en el arbol.
+
+Si maneja a mano la estructura de datos pueden llegar a aparecer dichos valores.
+
+
+Otra consideración, es que no aceptamos claves vacías en las funciones. En el caso
+que se proporcione una clave vacía, la función generará un error. 
+
+-}
+
+
+
 -- a) Busca el valor asociado a una clave 
 search :: Ord k => [k] -> TTree k v -> Maybe v
-search [] _            = error "Error: keys must be non-empty"
-search _ E             = Nothing
+search [] _           = error "Error: keys must be non-empty"
+search _ E            = Nothing
 
 search (x:xs) (Leaf k v)        
-          | null xs    = if x == k then Just v else Nothing
-          | otherwise  = Nothing
+          | null xs   = if x == k then Just v else Nothing
+          | otherwise = Nothing
 
 search (x:xs) (Node k mv l c r)
-          | x == k     = if null xs then mv else search xs c
-          | x < k      = search (x:xs) l
-          | x > k      = search (x:xs) r
+          | x == k    = if null xs then mv else search xs c
+          | x < k     = search (x:xs) l
+          | x > k     = search (x:xs) r
 
 
 
 -- b) Agrega un par (clave, valor) a un arbol. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
 insert :: Ord k => [k] -> v -> TTree k v -> TTree k v
-insert lx v E             = keyToTTree lx v 
+insert [] _ _        = error "Error: keys must be non-empty"
+insert lx v E        = keyToTTree lx v 
 
 insert lx@(x:xs) nv (Leaf k v) 
           | x == k   = if null xs then Leaf k nv
@@ -113,14 +120,28 @@ instance Ord k => Dic [k] v (TTree k v) where
      claves   = keys
 
  
-t1 = insert "re" 16 E
-t2 = insert "sin" 7 t1
-t3 = insert "si" 4 t2
-t4 = insert "se" 8 t3
-t5 = insert "reo" 2 t4
-t6 = insert "red" 9 t5
-t7 = insert "res" 4 t6
-t8 = insert "ras" 1 t7
+
+-- Ejemplo de TTree Char Integer proporcionado en el TP 
+t :: TTree Char Integer
+t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
+                                           (Node 'o' (Just 2)  (Leaf 'd' 9)
+                                                               E 
+                                                               (Leaf 's' 4))
+                                           E)
+                      (Node 's' Nothing E (Node 'i' (Just 4) (Leaf 'e' 8)
+                                                             (Leaf 'n' 7)
+                                                                  E)
+                        E)
+
+-- Construimos el árbol a partir de insertar
+t1 = insertar "re" 16 E
+t2 = insertar "sin" 7 t1
+t3 = insertar "si" 4 t2
+t4 = insertar "se" 8 t3
+t5 = insertar "reo" 2 t4
+t6 = insertar "red" 9 t5
+t7 = insertar "res" 4 t6
+t8 = insertar "ras" 1 t7
 
 
 
