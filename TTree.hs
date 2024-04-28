@@ -27,46 +27,44 @@ se realizan operaciones directamente con los datos algebraicos pueden producirse
 -}
 
 
-
 -- a) Busca el valor asociado a una clave 
 
 search :: Ord k => [k] -> TTree k v -> Maybe v
-search [] _           = error "Error: keys must be non-empty"
-search _ E            = Nothing
+search [] _              = error "Error: keys must be non-empty"
+search _ E               = Nothing
 
-search (x:xs) (Leaf k v)        
-          | null xs   = if x == k then Just v else Nothing
-          | otherwise = Nothing
+search (x:xs) (Leaf k v) = if x == k && null xs then Just v 
+                                                else Nothing
 
 search lx@(x:xs) (Node k mv l c r)
-          | x == k    = if null xs then mv else search xs c
-          | x < k     = search lx l
-          | x > k     = search lx r
+          | x == k       = if null xs then mv else search xs c
+          | x < k        = search lx l
+          | x > k        = search lx r
 
 
 
 -- b) Agrega un par (clave, valor) a un arbol. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
 
--- Dada una llave [k] y un valor v, keyToLinearTTree retorna el arbol que se obtiene de insertar
+-- Dada una llave [k] y un valor v, insertIntoEmpty retorna el arbol que se obtiene de insertar
 -- este par clave-valor en un arbol vacio, que es un arbol solo con hijos del medio donde el unico
 -- que lleva un valor es el ultimo (una hoja).
 
-keyToLinearTTree :: Ord k => [k] -> v -> TTree k v
-keyToLinearTTree [x] v = Leaf x v
-keyToLinearTTree (x:xs) v = Node x Nothing E (keyToLinearTTree xs v) E
+insertIntoEmpty :: Ord k => [k] -> v -> TTree k v
+insertIntoEmpty [x] v      = Leaf x v
+insertIntoEmpty (x:xs) v   = Node x Nothing E (insertIntoEmpty xs v) E
 
 
 insert :: Ord k => [k] -> v -> TTree k v -> TTree k v
-insert [] _ _        = error "Error: keys must be non-empty"
-insert lx v E        = keyToLinearTTree lx v 
+insert [] _ _  = error "Error: keys must be non-empty"
+insert lx v E  = insertIntoEmpty lx v 
 
 insert lx@(x:xs) nv (Leaf k v) 
           | x == k   = if null xs then Leaf k nv
-                                  else Node k (Just v) E (keyToLinearTTree xs nv) E
+                                  else Node k (Just v) E (insertIntoEmpty xs nv) E
 
-          | x > k    = Node k (Just v) E E (keyToLinearTTree lx nv)
-          | x < k    = Node k (Just v) (keyToLinearTTree lx nv) E E
+          | x > k    = Node k (Just v) E E (insertIntoEmpty lx nv)
+          | x < k    = Node k (Just v) (insertIntoEmpty lx nv) E E
 
 insert lx@(x:xs) nv (Node k v l c r) 
           | x == k   = if null xs then Node k (Just nv) l c r
@@ -79,18 +77,18 @@ insert lx@(x:xs) nv (Node k v l c r)
 -- c) Elimina una clave y el valor asociado a esta en un arbol
 
 delete :: Ord k => [k] -> TTree k v -> TTree k v
-delete [] _ = error "Error: keys must be non-empty"
-delete _ E = E
+delete [] _              = error "Error: keys must be non-empty"
+delete _ E               = E
 
 delete (x:xs) lf@(Leaf k v) 
-          | x == k  = if null xs then E else lf
-          | otherwise = lf 
+          | x == k       = if null xs then E else lf
+          | otherwise    = lf 
 
 delete lx@(x:xs) (Node k v l c r) 
-          | x == k   = if null xs then balance (replace (Node k Nothing l c r))
-                                  else balance (Node k v l (delete xs c) r) 
-          | x > k    = balance (Node k v l c (delete lx r))
-          | x < k    = balance (Node k v (delete lx l) c r)
+          | x == k       = if null xs then balance (replace (Node k Nothing l c r))
+                                      else balance (Node k v l (delete xs c) r) 
+          | x > k        = balance (Node k v l c (delete lx r))
+          | x < k        = balance (Node k v (delete lx l) c r)
 
           where
 
@@ -103,47 +101,28 @@ delete lx@(x:xs) (Node k v l c r)
                replace E                = E
                replace (Node _ _ l E E) = l
                replace (Node _ _ E E r) = r
-               replace (Node _ _ l E r) = let
-                                             ((minKey, minVal), minCentre, modRight) = minAux r
-                                          in  
-                                             Node minKey minVal l minCentre modRight
+               replace (Node _ _ l E r) = let (Node k v _ c _, r') = minAux r
+                                          in   Node k v l c r'
                replace t                = t
 
-               -- Y podriamos usar el minAux2
-               -- replace (Node _ _ l E r) = let
-               --                               ((Node k v _ c _), r') = minAux2 r                                 
-               --                            in
-               --                              Node k v l c r'
-               --
 
+-- Dado un TTree k v, minAux devuelve un par de TTree k v tal que
+--   El primer  arbol contiene el par clave valor del nodo minimo y su subarbol del medio
+--   EL segundo arbol es el resultante de haber reemplazado el nodo minimo por su subarbol derecho en el arbol original
 
--- Dado un TTree k v, minAux devuelve una 3-upla tal que:
---   El primer  elemento es una tupla (k, Maybe v) con el par clave-valor del nodo con menor clave del arbol.
---   El segundo elemento es el TTree k v correspondiente al hijo del medio del menor nodo
---   El tercer  elemento es el TTree k v resultante de reemplazar en el arbol original al nodo minimo con su hijo derecho.
-
-minAux :: Ord k => TTree k v -> ((k, Maybe v), TTree k v, TTree k v)
-minAux E                    = error "Error: cannot determine minimum of an empty tree"
-minAux (Leaf k v)           = ((k, Just v), E, E)
-minAux (Node k v E c r)     = ((k, v), c, r)
-minAux (Node k v l c r)     = let (keyval, centre, modifiedTree) = minAux l
-                                             in  (keyval, centre, Node k v modifiedTree c r) 
-
--- minAux2 :: Ord k => TTree k v -> (TTree k v, TTree k v)
--- minAux2 E = error "Error: cannot determine minimu of an empty tree"
--- minAux2 (Leaf k v) = ((Node k (Just v) E E E), E)
--- minAux2 (Node k v E c r)  = ((Node k v E c E), r)
--- minAux2 (Node k v l c r) = let
---                              (minNode, l') = minAux2 l
---                            in
---                              (minNode, (Node k v l' c r))
+minAux :: Ord k => TTree k v -> (TTree k v, TTree k v)
+minAux E                 = error "Error: cannot determine minimum of an empty tree"
+minAux (Leaf k v)        = (Node k (Just v) E E E, E)
+minAux (Node k v E c r)  = (Node k v E c E, r)
+minAux (Node k v l c r)  = let (minNode, l') = minAux l
+                           in  (minNode, Node k v l' c r)
 
 
 -- d) Devuelve una lista ordenada con las claves del mismo
 
 keys :: TTree k v -> [[k]]
-keys E = []
-keys (Leaf k _) = [[k]]
+keys E                = []
+keys (Leaf k _)       = [[k]]
 keys (Node k v l c r) = keys l ++ ifKey k v ++ map (k:) (keys c) ++ keys r 
 
      where 
