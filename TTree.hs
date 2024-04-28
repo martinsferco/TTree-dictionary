@@ -38,20 +38,19 @@ search (x:xs) (Leaf k v)
           | null xs   = if x == k then Just v else Nothing
           | otherwise = Nothing
 
-search (x:xs) (Node k mv l c r)
+search lx@(x:xs) (Node k mv l c r)
           | x == k    = if null xs then mv else search xs c
-          | x < k     = search (x:xs) l
-          | x > k     = search (x:xs) r
+          | x < k     = search lx l
+          | x > k     = search lx r
 
 
 
 -- b) Agrega un par (clave, valor) a un arbol. Si la clave esta en el arbol, actualiza
 -- su valor. Esto indica que no puede haber elementos distintos con claves distintas.
 
-
 -- Dada una llave [k] y un valor v, keyToLinearTTree retorna el arbol que se obtiene de insertar
 -- este par clave-valor en un arbol vacio, que es un arbol solo con hijos del medio donde el unico
--- que lleva un valor es el ultimo.
+-- que lleva un valor es el ultimo (una hoja).
 
 keyToLinearTTree :: Ord k => [k] -> v -> TTree k v
 keyToLinearTTree [x] v = Leaf x v
@@ -111,16 +110,16 @@ delete lx@(x:xs) (Node k v l c r)
                replace t                = t
 
 
-               -- Dado un TTree k v, minAux devuelve una 3-upla tal que:
-               --   El primer  elemento es una tupla (k, Maybe v) con el par clave-valor del nodo con menor clave del arbol.
-               --   El segundo elemento es el TTree k v correspondiente al hijo del medio del menor nodo
-               --   El tercer  elemento es el TTree k v resultante de reemplazar en el arbol original al nodo minimo con su hijo derecho.
+-- Dado un TTree k v, minAux devuelve una 3-upla tal que:
+--   El primer  elemento es una tupla (k, Maybe v) con el par clave-valor del nodo con menor clave del arbol.
+--   El segundo elemento es el TTree k v correspondiente al hijo del medio del menor nodo
+--   El tercer  elemento es el TTree k v resultante de reemplazar en el arbol original al nodo minimo con su hijo derecho.
 
-               minAux :: Ord k => TTree k v -> ((k, Maybe v), TTree k v, TTree k v)
-               minAux E                    = error "Error: cannot determine minimum of an empty tree"
-               minAux (Leaf k v)           = ((k, Just v), E, E)
-               minAux (Node k v E c r)     = ((k, v), c, r)
-               minAux (Node k v l c r)     = let (keyval, centre, modifiedTree) = minAux l
+minAux :: Ord k => TTree k v -> ((k, Maybe v), TTree k v, TTree k v)
+minAux E                    = error "Error: cannot determine minimum of an empty tree"
+minAux (Leaf k v)           = ((k, Just v), E, E)
+minAux (Node k v E c r)     = ((k, v), c, r)
+minAux (Node k v l c r)     = let (keyval, centre, modifiedTree) = minAux l
                                              in  (keyval, centre, Node k v modifiedTree c r) 
 
 
@@ -161,7 +160,8 @@ t = Node 'r' Nothing E (Node 'e' (Just 16) (Node 'a' Nothing E (Leaf 's' 1) E)
                                                                   E)
                         E)
 
--- Construimos el árbol a partir de insertar
+-- Construimos el ejemplo de TTree Char Integer proporcionado en el tp
+--  a partir de nuestra funcion insertar de la clase Dic.
 t1 = insertar "re" 16 E
 t2 = insertar "sin" 7 t1
 t3 = insertar "si" 4 t2
@@ -170,6 +170,4 @@ t5 = insertar "reo" 2 t4
 t6 = insertar "red" 9 t5
 t7 = insertar "res" 4 t6
 t8 = insertar "ras" 1 t7
-
-
 
