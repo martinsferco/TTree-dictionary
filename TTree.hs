@@ -109,6 +109,13 @@ delete lx@(x:xs) (Node k v l c r)
                                              Node minKey minVal l minCentre modRight
                replace t                = t
 
+               -- Y podriamos usar el minAux2
+               -- replace (Node _ _ l E r) = let
+               --                               ((Node k v _ c _), r') = minAux2 r                                 
+               --                            in
+               --                              Node k v l c r'
+               --
+
 
 -- Dado un TTree k v, minAux devuelve una 3-upla tal que:
 --   El primer  elemento es una tupla (k, Maybe v) con el par clave-valor del nodo con menor clave del arbol.
@@ -121,6 +128,15 @@ minAux (Leaf k v)           = ((k, Just v), E, E)
 minAux (Node k v E c r)     = ((k, v), c, r)
 minAux (Node k v l c r)     = let (keyval, centre, modifiedTree) = minAux l
                                              in  (keyval, centre, Node k v modifiedTree c r) 
+
+-- minAux2 :: Ord k => TTree k v -> (TTree k v, TTree k v)
+-- minAux2 E = error "Error: cannot determine minimu of an empty tree"
+-- minAux2 (Leaf k v) = ((Node k (Just v) E E E), E)
+-- minAux2 (Node k v E c r)  = ((Node k v E c E), r)
+-- minAux2 (Node k v l c r) = let
+--                              (minNode, l') = minAux2 l
+--                            in
+--                              (minNode, (Node k v l' c r))
 
 
 -- d) Devuelve una lista ordenada con las claves del mismo
@@ -137,7 +153,6 @@ keys (Node k v l c r) = keys l ++ ifKey k v ++ map (k:) (keys c) ++ keys r
 
 
 -- Ahora demos una instancia de la clase Dic para el tipo de datos TTree k v
-
 instance Ord k => Dic [k] v (TTree k v) where
 
      vacio    = E
