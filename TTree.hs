@@ -98,7 +98,6 @@ delete lx@(x:xs) (Node k v l c r)
                balance t                       = t
 
                replace :: Ord k => TTree k v -> TTree k v
-               replace E                = E
                replace (Node _ _ l E E) = l
                replace (Node _ _ E E r) = r
                replace (Node _ _ l E r) = let (Node k v _ c _, r') = minAux r
