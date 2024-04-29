@@ -82,7 +82,7 @@ insertIntoEmpty (x:xs) v   = Node x Nothing E (insertIntoEmpty xs v) E
      El arbol resultante seguira siendo valido, pero ocasionalmente dara lugar a
      nodos de la forma
 
-                                        N k E l E r
+                                   N k Nothing l E r
 
      que no son necesarios, pues al no tener un valor asociado ni ser parte del
      prefijo de alguna clave, el nodo puede ser reemplazado. De esto se encarga
