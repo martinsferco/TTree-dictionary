@@ -76,6 +76,20 @@ insertIntoEmpty (x:xs) v   = Node x Nothing E (insertIntoEmpty xs v) E
 
 
 -- c) Elimina una clave y el valor asociado a esta en un arbol.
+
+{-
+     Observacion. Tambien puede implementarse delete sin hacer llamados a replace.
+     El arbol resultante seguira siendo valido, pero ocasionalmente dara lugar a
+     nodos de la forma
+
+                                        N k E l E r
+
+     que no son necesarios, pues al no tener un valor asociado ni ser parte del
+     prefijo de alguna clave, el nodo puede ser reemplazado. De esto se encarga
+     la funcion replace poniendo en su lugar, analogamente al caso de los BST,
+     el nodo mas a la izquierda del subarbol r (con ciertas modificaciones).
+-}
+
 delete :: Ord k => [k] -> TTree k v -> TTree k v
 delete [] _                 = error "Error: keys must be non-empty"
 delete _ E                  = E
