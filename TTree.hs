@@ -1,3 +1,7 @@
+-- Trabajo practico realizado por: 
+--      - Rassi Octavio.
+--      - Sferco Martin.
+
 module TTree where
 import Dic
 

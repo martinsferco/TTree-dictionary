@@ -13,4 +13,4 @@ class Dic k v d | d -> k v where
   insertar :: Ord k => k -> v -> d -> d
   buscar   :: Ord k => k -> d -> Maybe v
   eliminar :: Ord k => k -> d -> d
-  claves   :: Ord k => d -> [k]  
+  claves   :: Ord k => d -> [k]
